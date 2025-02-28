@@ -1,103 +1,104 @@
 import random
 
-class NineCoreProcessor:
-    def __init__(self, memory_size=16, seed=None):
-        """
-        Initializes a 9-core processor with 8 binary cores and 1 special core.
-        """
-        self.registers = {"A": '0', "B": '0', "C": '0', "D": '0'}
-        self.memory = ['0'] * memory_size  # Simple memory model
-        self.pc = 0  # Program counter
-        self.instructions = []  # Loaded instructions
-        self.cores = ["Binary Core" for _ in range(8)] + ["Special Core"]
+class Core:
+    """Represents a standard processing core."""
+    def __init__(self, core_id, special_core):
+        self.core_id = core_id
+        self.registers = {'A': 0, 'B': 0, 'C': 0, 'D': 0}  # ✅ Registers – Store values for computation
+        self.special_core = special_core
     
-    def set_register(self, reg, value):
-        """Sets a register with a value ('0', '1', or '0 or 1')."""
-        if reg in self.registers and value in ['0', '1', '0 or 1']:
-            self.registers[reg] = value
+    def execute(self, instruction, operand1=None, operand2=None):
+        """Executes a given instruction."""
+        if instruction == 'MOV':
+            self.registers[operand1] = operand2
+        elif instruction == 'ADD':
+            self.registers[operand1] += self.registers[operand2]  # ✅ ALU (Arithmetic Logic Unit) – Perform operations like addition or bitwise logic
+        elif instruction == 'AND':
+            self.registers[operand1] &= self.registers[operand2]
+        elif instruction == 'OR':
+            self.registers[operand1] |= self.registers[operand2]
+        elif instruction == 'NOT':
+            self.registers[operand1] = ~self.registers[operand1]
+        elif instruction == 'XOR':
+            self.registers[operand1] ^= self.registers[operand2]
+        elif instruction == 'SUB':
+            self.registers[operand1] -= self.registers[operand2]
+        elif instruction == 'MUL':
+            self.registers[operand1] *= self.registers[operand2]
+        elif operand1 == '0 or 1':
+            return self.special_core.resolve()
+        return self.registers
+
+class SpecialCore:
+    """Represents the 9th core that handles unstable states (0 or 1) for all cores."""
+    def resolve(self):
+        """Resolves unstable state probabilistically."""
+        return random.choice([0, 1])
+
+class Memory:
+    """Handles memory read and write operations."""
+    def __init__(self, size=256):
+        self.memory = [0] * size  # ✅ Memory Interface – Read/write data
+    
+    def load(self, address):
+        return self.memory[address]
+    
+    def store(self, address, value):
+        self.memory[address] = value
+
+class ControlUnit:
+    """Manages instruction flow and core allocation."""
+    def __init__(self):
+        self.special_core = SpecialCore()
+        self.cores = [Core(i, self.special_core) for i in range(8)]  # Standard cores 0-7
+        self.memory = Memory()
+    
+    def execute_instruction(self, core_id, instruction, operand1=None, operand2=None):
+        """Executes an instruction on the specified core."""
+        if core_id < 8:
+            return self.cores[core_id].execute(instruction, operand1, operand2)
+        elif core_id == 8:
+            return self.special_core.resolve()
         else:
-            raise ValueError("Invalid register or value. Allowed values: '0', '1', '0 or 1'.")
+            raise ValueError("Invalid core ID")
     
-    def resolve_state(self, value, core_id):
-        """Resolves an unstable '0 or 1' probabilistically only on the special core."""
-        if core_id == 8 and value == '0 or 1':  # Special core handles instability
-            return '0' if random.randint(0, 1) == 0 else '1'
-        return value
-    
-    def execute(self, instruction):
-        """Executes a single instruction."""
-        parts = instruction.split()
-        opcode = parts[0]
-        core_id = self.pc % 9  # Assigns instruction execution to a core
-        
-        if opcode == "MOV":
-            reg, val = parts[1], parts[2]
-            self.set_register(reg, val)
-        
-        elif opcode == "ADD":
-            reg1, reg2 = parts[1], parts[2]
-            v1 = self.resolve_state(self.registers[reg1], core_id)
-            v2 = self.resolve_state(self.registers[reg2], core_id)
-            self.registers["C"] = str(int(v1) ^ int(v2))  # XOR logic
-        
-        elif opcode == "AND":
-            reg1, reg2 = parts[1], parts[2]
-            v1 = self.resolve_state(self.registers[reg1], core_id)
-            v2 = self.resolve_state(self.registers[reg2], core_id)
-            self.registers["C"] = str(int(v1) & int(v2))  # AND logic
-        
-        elif opcode == "OR":
-            reg1, reg2 = parts[1], parts[2]
-            v1 = self.resolve_state(self.registers[reg1], core_id)
-            v2 = self.resolve_state(self.registers[reg2], core_id)
-            self.registers["C"] = str(int(v1) | int(v2))  # OR logic
-        
-        elif opcode == "NOT":
-            reg = parts[1]
-            v1 = self.resolve_state(self.registers[reg], core_id)
-            self.registers["C"] = '1' if v1 == '0' else '0'
-        
-        elif opcode == "JMP":
-            addr = int(parts[1])
-            self.pc = addr - 1  # Jump (subtract 1 because pc increments after execution)
-        
-        elif opcode == "JZ":
-            addr = int(parts[1])
-            if self.registers["C"] == '0':
-                self.pc = addr - 1
-        
-        elif opcode == "LOAD":
-            reg, addr = parts[1], int(parts[2])
-            self.registers[reg] = self.memory[addr]
-        
-        elif opcode == "STORE":
-            reg, addr = parts[1], int(parts[2])
-            self.memory[addr] = self.registers[reg]
-        
+    def memory_operation(self, operation, address, value=None):
+        """Handles memory read and write operations."""
+        if operation == 'LOAD':
+            return self.memory.load(address)
+        elif operation == 'STORE':
+            self.memory.store(address, value)
         else:
-            raise ValueError(f"Unknown instruction: {opcode}")
-    
-    def load_program(self, program):
-        """Loads a list of instructions into memory."""
-        self.instructions = program
-    
-    def run(self):
-        """Executes loaded program instruction by instruction across 9 cores."""
-        while self.pc < len(self.instructions):
-            self.execute(self.instructions[self.pc])
-            self.pc += 1
-    
-# Example usage
+            raise ValueError("Invalid memory operation")
+
+# ✅ Core Components of the CPU
+# ✅ Neutral Trinary CPU Instruction Set
+# ✅ Neutral Trinary CPU Pipeline
+# ✅ Sample Program Execution
+
+# Example Usage:
 if __name__ == "__main__":
-    cpu = NineCoreProcessor()
-    program = [
-        "MOV A 0 or 1",
-        "MOV B 1",
-        "ADD A B",
-        "STORE C 0",
-        "JMP 2"
-    ]
-    cpu.load_program(program)
-    cpu.run()
-    print("Final Register State:", cpu.registers)
-    print("Memory:", cpu.memory)
+    cu = ControlUnit()
+    
+    # Standard core execution
+    print("Core 0 Executing MOV A, 5")
+    print(cu.execute_instruction(0, 'MOV', 'A', 5))
+    
+    print("Core 0 Executing ADD A, A")
+    print(cu.execute_instruction(0, 'ADD', 'A', 'A'))
+    
+    print("Core 0 Executing XOR A, B")
+    print(cu.execute_instruction(0, 'XOR', 'A', 'B'))
+    
+    print("Core 0 Executing MUL A, B")
+    print(cu.execute_instruction(0, 'MUL', 'A', 'B'))
+    
+    # Special core resolving unstable state for all cores
+    print("Special Core Resolving '0 or 1'")
+    print(cu.execute_instruction(8, None))
+    
+    # Memory operations
+    print("Storing 42 at memory address 10")
+    cu.memory_operation('STORE', 10, 42)
+    print("Loading from memory address 10")
+    print(cu.memory_operation('LOAD', 10))
