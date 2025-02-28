@@ -49,6 +49,12 @@ class Core:
             self.registers['C'] = (self.registers[operand1] == self.registers[operand2])
         elif instruction == 'HLT':
             return 'HALT'
+        elif instruction == 'NOP':
+            pass  # No operation
+        elif instruction == 'CALL':
+            self.stack.append(operand1)  # Simulate function call by pushing address
+        elif instruction == 'RET':
+            return self.stack.pop() if self.stack else None
         elif operand1 == '0 or 1':
             return self.special_core.resolve()
         return self.registers
@@ -113,6 +119,12 @@ if __name__ == "__main__":
     
     print("Core 0 Executing CMP A, B")
     print(cu.execute_instruction(0, 'CMP', 'A', 'B'))
+    
+    print("Core 0 Executing CALL 100")
+    print(cu.execute_instruction(0, 'CALL', 100))
+    
+    print("Core 0 Executing RET")
+    print(cu.execute_instruction(0, 'RET'))
     
     print("Core 0 Executing HLT")
     print(cu.execute_instruction(0, 'HLT'))
