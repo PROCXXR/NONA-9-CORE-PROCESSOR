@@ -6,6 +6,7 @@ class Core:
         self.core_id = core_id
         self.registers = {'A': 0, 'B': 0, 'C': 0, 'D': 0}  # ✅ Registers – Store values for computation
         self.special_core = special_core
+        self.stack = []  # ✅ Stack for PUSH/POP operations
     
     def execute(self, instruction, operand1=None, operand2=None):
         """Executes a given instruction."""
@@ -13,18 +14,37 @@ class Core:
             self.registers[operand1] = operand2
         elif instruction == 'ADD':
             self.registers[operand1] += self.registers[operand2]  # ✅ ALU (Arithmetic Logic Unit) – Perform operations like addition or bitwise logic
-        elif instruction == 'AND':
-            self.registers[operand1] &= self.registers[operand2]
-        elif instruction == 'OR':
-            self.registers[operand1] |= self.registers[operand2]
-        elif instruction == 'NOT':
-            self.registers[operand1] = ~self.registers[operand1]
-        elif instruction == 'XOR':
-            self.registers[operand1] ^= self.registers[operand2]
         elif instruction == 'SUB':
             self.registers[operand1] -= self.registers[operand2]
         elif instruction == 'MUL':
             self.registers[operand1] *= self.registers[operand2]
+        elif instruction == 'DIV':
+            self.registers[operand1] //= self.registers[operand2] if self.registers[operand2] != 0 else 1
+        elif instruction == 'MOD':
+            self.registers[operand1] %= self.registers[operand2] if self.registers[operand2] != 0 else 1
+        elif instruction == 'AND':
+            self.registers[operand1] &= self.registers[operand2]
+        elif instruction == 'OR':
+            self.registers[operand1] |= self.registers[operand2]
+        elif instruction == 'XOR':
+            self.registers[operand1] ^= self.registers[operand2]
+        elif instruction == 'NOT':
+            self.registers[operand1] = ~self.registers[operand1]
+        elif instruction == 'SHL':
+            self.registers[operand1] <<= operand2
+        elif instruction == 'SHR':
+            self.registers[operand1] >>= operand2
+        elif instruction == 'PUSH':
+            self.stack.append(self.registers[operand1])
+        elif instruction == 'POP':
+            if self.stack:
+                self.registers[operand1] = self.stack.pop()
+        elif instruction == 'JMP':
+            return operand1
+        elif instruction == 'JZ':
+            return operand1 if self.registers['A'] == 0 else None
+        elif instruction == 'JNZ':
+            return operand1 if self.registers['A'] != 0 else None
         elif operand1 == '0 or 1':
             return self.special_core.resolve()
         return self.registers
@@ -92,6 +112,15 @@ if __name__ == "__main__":
     
     print("Core 0 Executing MUL A, B")
     print(cu.execute_instruction(0, 'MUL', 'A', 'B'))
+    
+    print("Core 0 Executing SHL A, 1")
+    print(cu.execute_instruction(0, 'SHL', 'A', 1))
+    
+    print("Core 0 Pushing A to stack")
+    print(cu.execute_instruction(0, 'PUSH', 'A'))
+    
+    print("Core 0 Popping to B")
+    print(cu.execute_instruction(0, 'POP', 'B'))
     
     # Special core resolving unstable state for all cores
     print("Special Core Resolving '0 or 1'")
