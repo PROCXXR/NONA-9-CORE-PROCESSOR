@@ -45,6 +45,10 @@ class Core:
             return operand1 if self.registers['A'] == 0 else None
         elif instruction == 'JNZ':
             return operand1 if self.registers['A'] != 0 else None
+        elif instruction == 'CMP':
+            self.registers['C'] = (self.registers[operand1] == self.registers[operand2])
+        elif instruction == 'HLT':
+            return 'HALT'
         elif operand1 == '0 or 1':
             return self.special_core.resolve()
         return self.registers
@@ -107,20 +111,11 @@ if __name__ == "__main__":
     print("Core 0 Executing ADD A, A")
     print(cu.execute_instruction(0, 'ADD', 'A', 'A'))
     
-    print("Core 0 Executing XOR A, B")
-    print(cu.execute_instruction(0, 'XOR', 'A', 'B'))
+    print("Core 0 Executing CMP A, B")
+    print(cu.execute_instruction(0, 'CMP', 'A', 'B'))
     
-    print("Core 0 Executing MUL A, B")
-    print(cu.execute_instruction(0, 'MUL', 'A', 'B'))
-    
-    print("Core 0 Executing SHL A, 1")
-    print(cu.execute_instruction(0, 'SHL', 'A', 1))
-    
-    print("Core 0 Pushing A to stack")
-    print(cu.execute_instruction(0, 'PUSH', 'A'))
-    
-    print("Core 0 Popping to B")
-    print(cu.execute_instruction(0, 'POP', 'B'))
+    print("Core 0 Executing HLT")
+    print(cu.execute_instruction(0, 'HLT'))
     
     # Special core resolving unstable state for all cores
     print("Special Core Resolving '0 or 1'")
