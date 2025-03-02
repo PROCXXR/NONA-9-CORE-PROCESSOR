@@ -1,0 +1,86 @@
+{
+  "name": "Nine Core Processor",
+  "modules": [
+    {
+      "name": "Core_0",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_1",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_2",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_3",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_4",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_5",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_6",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_7",
+      "type": "standard",
+      "description": "Binary processing core"
+    },
+    {
+      "name": "Core_8",
+      "type": "probabilistic",
+      "description": "Processes unstable states (0 or 1 probabilistically)"
+    },
+    {
+      "name": "ALU",
+      "type": "arithmetic",
+      "description": "Performs arithmetic and logical operations"
+    },
+    {
+      "name": "Registers",
+      "type": "storage",
+      "description": "Holds temporary data for processing"
+    },
+    {
+      "name": "Memory_Controller",
+      "type": "storage",
+      "description": "Handles memory read/write operations"
+    },
+    {
+      "name": "LCU",
+      "type": "control",
+      "description": "Logic Control Unit for managing execution flow"
+    }
+  ],
+  "connections": [
+    { "from": "Core_0", "to": "ALU" },
+    { "from": "Core_1", "to": "ALU" },
+    { "from": "Core_2", "to": "ALU" },
+    { "from": "Core_3", "to": "ALU" },
+    { "from": "Core_4", "to": "ALU" },
+    { "from": "Core_5", "to": "ALU" },
+    { "from": "Core_6", "to": "ALU" },
+    { "from": "Core_7", "to": "ALU" },
+    { "from": "Core_8", "to": "ALU" },
+    { "from": "ALU", "to": "Registers" },
+    { "from": "Registers", "to": "Memory_Controller" },
+    { "from": "Memory_Controller", "to": "ALU" },
+    { "from": "LCU", "to": "ALU" },
+    { "from": "LCU", "to": "Registers" }
+  ]
+}
