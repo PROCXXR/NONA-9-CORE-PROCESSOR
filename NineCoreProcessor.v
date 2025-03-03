@@ -31,19 +31,72 @@ module NineCoreProcessor(
                 8'h09: registers[core_id][operand1] <= ~registers[core_id][operand1]; // NOT
                 8'h0A: registers[core_id][operand1] <= registers[core_id][operand1] << operand2; // SHL
                 8'h0B: registers[core_id][operand1] <= registers[core_id][operand1] >> operand2; // SHR
-                8'h0C: stack[sp] <= registers[core_id][operand1]; sp <= sp + 1; // PUSH
-                8'h0D: if (sp > 0) begin sp <= sp - 1; registers[core_id][operand1] <= stack[sp]; end // POP (Prevent underflow)
-                8'h0E: result <= operand1; // JMP
-                8'h0F: if (registers[core_id][0] == 8'b0) result <= operand1; // JZ
-                8'h10: if (registers[core_id][0] != 8'b0) result <= operand1; // JNZ
-                8'h11: registers[core_id][2] <= (registers[core_id][operand1] == registers[core_id][operand2]) ? 8'b1 : 8'b0; // CMP
-                8'h12: if (sp < 15) begin sp <= sp + 1; stack[sp] <= operand1; end // CALL (Prevent overflow)
-                8'h13: if (sp > 0) begin sp <= sp - 1; result <= stack[sp]; end // RET (Prevent underflow)
-                8'h14: result <= 8'b11111111; // HLT (HALT)
+                
+                // Fix: Wrap in `begin-end`
+                8'h0C: begin
+                    stack[sp] <= registers[core_id][operand1]; 
+                    sp <= sp + 1; 
+                end // PUSH
+
+                // Fix: Prevent stack underflow
+                8'h0D: begin 
+                    if (sp > 0) begin 
+                        sp <= sp - 1; 
+                        registers[core_id][operand1] <= stack[sp]; 
+                    end 
+                end // POP
+
+                8'h0E: begin
+                    result <= operand1;
+                end // JMP
+
+                8'h0F: begin
+                    if (registers[core_id][0] == 8'b0) 
+                        result <= operand1;
+                end // JZ
+
+                8'h10: begin
+                    if (registers[core_id][0] != 8'b0) 
+                        result <= operand1;
+                end // JNZ
+
+                8'h11: begin
+                    registers[core_id][2] <= (registers[core_id][operand1] == registers[core_id][operand2]) ? 8'b1 : 8'b0;
+                end // CMP
+
+                // Fix: Prevent stack overflow
+                8'h12: begin
+                    if (sp < 15) begin 
+                        sp <= sp + 1; 
+                        stack[sp] <= operand1; 
+                    end 
+                end // CALL
+
+                // Fix: Prevent stack underflow
+                8'h13: begin
+                    if (sp > 0) begin 
+                        sp <= sp - 1; 
+                        result <= stack[sp]; 
+                    end 
+                end // RET
+
+                8'h14: begin
+                    result <= 8'b11111111;
+                end // HLT (HALT)
+
                 8'h15: ; // NOP (No operation)
-                8'h16: registers[core_id][operand1] <= memory[operand2]; // LOAD
-                8'h17: memory[operand2] <= registers[core_id][operand1]; // STORE
-                default: result <= 8'b00000000;
+
+                8'h16: begin
+                    registers[core_id][operand1] <= memory[operand2];
+                end // LOAD
+
+                8'h17: begin
+                    memory[operand2] <= registers[core_id][operand1];
+                end // STORE
+
+                default: begin
+                    result <= 8'b00000000;
+                end // DEFAULT
             endcase
         end
     end
