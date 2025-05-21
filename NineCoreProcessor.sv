@@ -1,5 +1,5 @@
 module NineCoreProcessor(
-    input logic clk,
+    input logic random,
     input logic rst,
     input logic [31:0] instruction,
     output logic [31:0] result
